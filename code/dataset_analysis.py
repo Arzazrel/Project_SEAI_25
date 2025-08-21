@@ -91,7 +91,7 @@ def load_and_analyze_audio_from_ds():
     
     time_to_load = 0;               # var indicating the time spent for loading the audio files
     time_to_extract = 0;            # var indicating the time spent to extract the features from audio files
-    total_stft_data = []            # contain the data for STFT for the whole dataset
+    #total_stft_data = []            # contain the data for STFT for the whole dataset
     total_mel_data = []             # contain the data for MEL for the whole dataset
     total_mfcc_data = []            # contain the data for MFCC for the whole dataset
     total_labels = []               # contain the labels of the whole dataset
@@ -151,7 +151,7 @@ def load_and_analyze_audio_from_ds():
                     time_to_extract += (e_t - s_t)
                     
                     # add the data to the list
-                    total_stft_data.append(stft)
+                    #total_stft_data.append(stft)
                     total_mel_data.append(mel)
                     total_mfcc_data.append(mfcc)
                     total_labels.append(label)
@@ -197,16 +197,16 @@ def load_and_analyze_audio_from_ds():
         
     print("\n-- Space statistics --")
     
-    total_stft_data = np.array(total_stft_data)
+    #total_stft_data = np.array(total_stft_data)
     total_mel_data = np.array(total_mel_data)
     total_mfcc_data = np.array(total_mfcc_data)
     total_labels = np.array(total_labels)
     
-    print("total_stft_data",len(total_stft_data), total_stft_data.shape)
+    #print("total_stft_data",len(total_stft_data), total_stft_data.shape)
     print("total_mel_data",len(total_mel_data), total_mel_data.shape)
     print("total_mfcc_data",len(total_mfcc_data), total_mfcc_data.shape)
     print("total_labels",len(total_labels), total_labels.shape)
-    print("Requied memory for STFT ds: ",f"{(total_stft_data.size * total_stft_data.itemsize / 10**6):.2f}", " MB")
+    #print("Requied memory for STFT ds: ",f"{(total_stft_data.size * total_stft_data.itemsize / 10**6):.2f}", " MB")
     print("Requied memory for MEL ds: ",f"{(total_mel_data.size * total_mel_data.itemsize / 10**6):.2f}", " MB")
     print("Requied memory for MFCC ds: ",f"{(total_mfcc_data.size * total_mfcc_data.itemsize / 10**6):.2f}", " MB")
     
