@@ -4,12 +4,15 @@
 """
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # 0 = all log, 1 = filter INFO, 2 = filter WARNING, 3 = filter ERROR
+os.environ["TF_GPU_ALLOCATOR"] = "cuda_malloc_async"
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
 import warnings
 warnings.filterwarnings("ignore")
 import absl.logging
 absl.logging.set_verbosity(absl.logging.ERROR)
 import time
 import tensorflow as tf
+from tensorflow.python.client import device_lib
 import tensorflow_io as tfio  
 import numpy as np
 import matplotlib.pyplot as plt
@@ -56,6 +59,27 @@ def is_valid_wav(audio_bin):
         return True
     except Exception:
         return False
+        
+# method to check GPU device avaible and setting
+def GPU_check():
+    print("-------------------- TENSORFLOW VERSION --------------------")
+    print(tf.__version__)
+    print("-------------------- AVAILABLE HW DEVICES --------------------")
+    print("List of devices:")
+    print(device_lib.list_local_devices())
+    print("--------------------")
+    print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Currently, memory growth needs to be the same across GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.list_logical_devices('GPU')
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            print(e)    
+    print("------------------------------------------------------------")
         
 # ------------------------------------ end: utilities method ------------------------------------
 
@@ -298,6 +322,7 @@ def print_avg_class_spectrum(avg_features):
 
 # ------------------------------------ main ------------------------------------        
 if __name__ == "__main__":
+    GPU_check()
     avg_features = load_and_analyze_audio_from_ds() # load and analyze the dataset
     print_avg_class_spectrum(avg_features)          # print the extracted features
 
