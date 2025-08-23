@@ -7,6 +7,7 @@ import time
 import random
 import math
 import numpy as np
+import pandas as pd
 import tensorflow_io as tfio  
 import matplotlib.pyplot as plt
 from tensorflow.python.client import device_lib 
@@ -23,6 +24,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 # for plot
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+import seaborn as sns
 # import of my files
 from net_classes import SirenNet_class as SirenNet
 
@@ -73,7 +75,7 @@ data_width = 224                # default value for width the 2D images in input
 data_channel = 1                # default value for channel the 2D images in input to CNN (images which represent the matrix of MEL or MFCC)
 epochs = 100                    # number of epochs for training, this is the deafault value
 early_patience = 10             # number of epochs with no improvement after which training will be stopped 
-chosen_model = 0                # indicate the model to use for training -> 0: CNN for image (SirenNet0) , 
+chosen_model = 1                # indicate the model to use for training -> 0: CNN for image (SirenNet0) , 
 num_test = 1                    # number of traning to execute on the same model from which the data will then be taken and averaged to obtain the general performance of the trained model
 
 # -- status variable --
@@ -90,10 +92,9 @@ def save_model_compatibily_format():
     model_path = path_check_point_model + '/weight_seg_SirenNet_' + str(chosen_model) + "_batch_" + str(batch_size)
     model_path_keras = model_path + ".keras" 
     
-    model_keras = keras.models.load_model(model_path_keras)               # load the .keras model
+    model_keras = keras.models.load_model(model_path_keras)     # load the .keras model
     
-    model.save(model_path + ".h5")     # save in .h5 format
-    model.save(model_path + "savedmodel", save_format="tf")   # saved in SavedModel format (for TensorFlow/Vitis compatibility)
+    network.save(model_path + ".h5")                            # save in .h5 format
    
 # method to print the relevant training parameter
 def print_fit_param():
@@ -209,103 +210,51 @@ def plot(title,value_list):
     plt.ylabel("Value")                 # y axis title
     plt.show()
     
-# method for create and plot the confusion metrix of the model trained
-def confusion_matrix():
-    global test_data, test_label, network, classes # global variables references
-    data_test = []                                  # set of the images of the test set
-    
-    # create the confusion matrix, rows indicate the real class and columns indicate the predicted class 
-    conf_matrix = np.zeros((len(classes),len(classes)))     # at begin values are 0
-    
-    # take all the images from the test set
-    for img_path in test_data:
-        data = np.load(img_path)                            # load data shape: [time, mel_bins or mfcc_coeff]
-        data_test.append(data) 
-                    
-    # resize the set of the image
-    data_test = np.array(data_test)
-    data_test = data_test.reshape((len(data_test), data_width, data_height, data_channel))     
-    
-    predictions = network.predict(data_test)                # get the output for each sample of the test set
-    # slide the prediction result and go to create the confusion matrix
-    for i in range(len(data_test)):
-        # test_label[i] indicate the real value of the label associated at the test_data[i] (or data_test[i]) -> is real class (row)
-        # predictions[i] indicate the class value predicted by the model for the test_data[i] (or data_test[i]) -> is predicted class (column)
-        # the values are in categorical format, translate in int
-        conf_matrix[np.argmax(test_label[i])][np.argmax(predictions[i])] += 1                               # update value
-        
-    # do percentages of confusion matrix
-    conf_matrix_perc = [[None for c in range(conf_matrix.shape[1])] for r in range(conf_matrix.shape[0])]   # define matrix
-    
-    for i in range(conf_matrix.shape[0]):                   # rows
-        for j in range(conf_matrix.shape[1]):               # columns
-            conf_matrix_perc[i][j] = " (" + str( round( (conf_matrix[i][j]/len(data_test))*100 ,2) ) + "%)" # calculate percentage value
-    
-    # plot the confusion matrix
-    rows = classes                                          # contain the label of the classes showed in the rowvalues of rows          
-    columns = classes                                       # contain the label of the classes showed in the rowvalues of columns   
-
-    fig, ax = plt.subplots(figsize=(7.5, 7))
-    ax.matshow(conf_matrix, cmap=plt.cm.Blues, alpha=0.3)
-    # Show all ticks and label them with the respective list entries
-    ax.set_xticks(np.arange(len(columns)), labels=columns)
-    ax.set_yticks(np.arange(len(rows)), labels=rows)
-    
-    for i in range(len(rows)):                              # rows
-        for j in range(len(columns)):                       # columns
-            # give the value in the confusion matrix
-            ax.text(x=j, y=i, s=str(str(conf_matrix[i][j])+conf_matrix_perc[i][j]),
-                           ha="center", va="center", size='x-large')
-            
-    plt.xlabel('Predictions', fontsize=18)
-    plt.ylabel('Real', fontsize=18)
-    plt.title('Confusion Matrix', fontsize=18)
-    plt.show()                                              # shows confusion matrix
     
 # to calculate confusion matrix using dataset.from.generator 
-def compute_confusion_matrix(model, dataset, steps, classes):
-    # Previsione batch-wise usando il dataset
-    predictions = model.predict(dataset, steps=steps)
+def compute_confusion_matrix(dataset, steps, classes):
+    global test_data, test_label, network
 
-    # Estrazione dei dati reali (labels) dal dataset (solo per i batch usati)
-    true_labels = []
-    for batch_idx, (_, y) in enumerate(dataset):
-        true_labels.append(y.numpy())
-        if batch_idx + 1 >= steps:
-            break
-    true_labels = np.concatenate(true_labels, axis=0)
+    # --- carico i dati del test set ---
+    data_test = [np.load(img_path) for img_path in test_data]
+    data_test = np.array(data_test).reshape((len(data_test), data_width, data_height, data_channel))
 
-    # Calcolo confusion matrix
+    # --- predizioni ---
+    predictions = network.predict(data_test)
+
+    # --- creo confusion matrix (conteggi assoluti) ---
     conf_matrix = np.zeros((len(classes), len(classes)), dtype=int)
-    for i in range(len(predictions)):
-        true_idx = np.argmax(true_labels[i])
-        pred_idx = np.argmax(predictions[i])
-        conf_matrix[true_idx][pred_idx] += 1
+    for i in range(len(data_test)):
+        real = np.argmax(test_label[i])
+        pred = np.argmax(predictions[i])
+        conf_matrix[real][pred] += 1
 
-    # Calcolo percentuali
-    conf_matrix_perc = [[
-        f" ({(conf_matrix[i][j] / np.sum(conf_matrix)) * 100:.2f}%)"
-        for j in range(conf_matrix.shape[1])
-    ] for i in range(conf_matrix.shape[0])]
-
-    # Visualizzazione confusion matrix
-    fig, ax = plt.subplots(figsize=(8, 8))
-    ax.matshow(conf_matrix, cmap=plt.cm.Blues, alpha=0.3)
-    ax.set_xticks(np.arange(len(classes)))
-    ax.set_yticks(np.arange(len(classes)))
-    ax.set_xticklabels(classes)
-    ax.set_yticklabels(classes)
-
-    for i in range(len(classes)):
-        for j in range(len(classes)):
-            ax.text(j, i, f"{conf_matrix[i][j]}{conf_matrix_perc[i][j]}",
-                    va='center', ha='center', fontsize=12)
-
+    # === Confusion matrix con numeri assoluti ===
+    conf_df_counts = pd.DataFrame(conf_matrix, index=classes, columns=classes)
+    plt.figure(figsize=(10,8))
+    sns.heatmap(conf_df_counts, annot=True, fmt="d", cmap="Blues", cbar=True,
+                annot_kws={"size": 12})
     plt.xlabel("Predicted", fontsize=14)
-    plt.ylabel("Actual", fontsize=14)
-    plt.title("Confusion Matrix", fontsize=16)
+    plt.ylabel("Real", fontsize=14)
+    plt.title("Confusion Matrix (Counts)", fontsize=16)
+    plt.xticks(rotation=45)
+    plt.yticks(rotation=0)
+    plt.tight_layout()
     plt.show()
-    
+
+    # === Confusion matrix con percentuali ===
+    conf_matrix_perc = conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
+    conf_df_perc = pd.DataFrame(conf_matrix_perc, index=classes, columns=classes)
+    plt.figure(figsize=(10,8))
+    sns.heatmap(conf_df_perc, annot=True, fmt=".2f", cmap="Greens", cbar=True,
+                annot_kws={"size": 12})
+    plt.xlabel("Predicted", fontsize=14)
+    plt.ylabel("Real", fontsize=14)
+    plt.title("Confusion Matrix (Percentages)", fontsize=16)
+    plt.xticks(rotation=45)
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+    plt.show()
 
 # ------------------------------------ end: plot method ------------------------------------
 
@@ -730,7 +679,8 @@ def make_fit_model():
         if num_test == 1:             # case only 1 fit
             dict_metrics = {'loss': test_loss, 'accuracy': test_acc}            # create a dictionary contain the metrics
             plot_fit_result(dict_metrics,1)                                     # plot the values obtained
-            compute_confusion_matrix(network, test_set, test_step, classes)     # call method to obtain the confusion matrix    
+            compute_confusion_matrix(test_set, test_step, classes)     # call method to obtain the confusion matrix  
+            print('loss', test_loss, ' accuracy', test_acc)
         else:                       # case more fit, statistical pourpose
             history_test['loss'].append(test_loss)
             history_test['accuracy'].append(test_acc)
@@ -742,11 +692,12 @@ def make_fit_model():
     # plot and calculate the mean in case of number of fit test done
     if num_test > 1:
         plot_accuracy_and_loss(history_train, history_val, history_test)
-        print_average_metrics(history_train, history_val, history_test)
-        compute_confusion_matrix(network, test_set, test_step, classes)         # call method to obtain the confusion matrix 
+        compute_confusion_matrix(test_set, test_step, classes)         # call method to obtain the confusion matrix 
     
     print(f"Time for training all the tests: ", format_time(end_all_time - start_all_time))
     print_fit_param()           # print for se the used parameters
+    if num_test > 1:
+        print_average_metrics(history_train, history_val, history_test)
     print("------------------------------------------------")
 
 # ------------------------------------ main ------------------------------------        
