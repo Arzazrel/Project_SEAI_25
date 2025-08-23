@@ -22,6 +22,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import EarlyStopping
 # for plot
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 # import of my files
 from net_classes import SirenNet_class as SirenNet
 
@@ -73,7 +74,7 @@ data_channel = 1                # default value for channel the 2D images in inp
 epochs = 100                    # number of epochs for training, this is the deafault value
 early_patience = 10             # number of epochs with no improvement after which training will be stopped 
 chosen_model = 0                # indicate the model to use for training -> 0: CNN for image (SirenNet0) , 
-num_test = 1                   # number of traning to execute on the same model from which the data will then be taken and averaged to obtain the general performance of the trained model
+num_test = 1                    # number of traning to execute on the same model from which the data will then be taken and averaged to obtain the general performance of the trained model
 
 # -- status variable --
 do_mfcc = False                 # if 'true' -> calculate and use MFCC for training , if 'false' -> donìt calculate MFCC and use MEL for training
@@ -83,6 +84,14 @@ erase_copy_ds = False           # if 'true' -> if the dataset copy folder is alr
 # ------------------------------------ end: global var ------------------------------------
 
 # ------------------------------------ start: utilities method ------------------------------------
+   
+# method to print the relevant training parameter
+def print_fit_param():
+    print("Trained SirenNet version ",chosen_model, " for ",num_test, " times.")
+    print("Train parameters:")
+    print("- epochs: ",epochs)
+    print("- batch_size: ",batch_size)
+    print("- early_patience: ",early_patience)
    
 # method to convert time in second in a string with this format hh:mm:ss
 def format_time(time):
@@ -96,6 +105,7 @@ def get_data_shape(path):
     global data_height, data_width
     data = np.load(path)                    # shape: [time, mel_bins or mfcc_coeff]
     data_width, data_height = data.shape
+    print("Data shape: width = ",data_width," , height = ",data_height)
     
    
 # method to check GPU device avaible and setting
@@ -191,37 +201,26 @@ def plot(title,value_list):
     
 # method for create and plot the confusion metrix of the model trained
 def confusion_matrix():
-    global test_image, test_label, network, classes # global variables references
+    global test_data, test_label, network, classes # global variables references
     data_test = []                                  # set of the images of the test set
     
     # create the confusion matrix, rows indicate the real class and columns indicate the predicted class 
     conf_matrix = np.zeros((len(classes),len(classes)))     # at begin values are 0
     
     # take all the images from the test set
-    for img_path in test_image:
-        img = cv2.imread(img_path)              # take current iamge
-        if img is not None:                     # check image taken
-        #check if the image is in the correct shape for the CNN (shape specified in the global variables)
-            if img.shape != (img_width, img_height, img_channel):       
-                dim = (img_height ,img_width)
-                img = cv2.resize(img, dim, interpolation= cv2.INTER_AREA)   # resize the image
-                img = img.astype('float32') / 255                           # normalization
-                data_test.append(img)                                       # add new element
-            else:
-                img = img.astype('float32') / 255                           # normalization
-                data_test.append(img)                                       # add new element
-        else:
-            print("Image loading error in model_evaluate...",img_path)
+    for img_path in test_data:
+        data = np.load(img_path)                            # load data shape: [time, mel_bins or mfcc_coeff]
+        data_test.append(data) 
                     
     # resize the set of the image
     data_test = np.array(data_test)
-    data_test = data_test.reshape((len(data_test), img_width, img_height, img_channel))     
+    data_test = data_test.reshape((len(data_test), data_width, data_height, data_channel))     
     
     predictions = network.predict(data_test)                # get the output for each sample of the test set
     # slide the prediction result and go to create the confusion matrix
     for i in range(len(data_test)):
-        # test_label[i] indicate the real value of the label associated at the test_image[i] (or data_test[i]) -> is real class (row)
-        # predictions[i] indicate the class value predicted by the model for the test_image[i] (or data_test[i]) -> is predicted class (column)
+        # test_label[i] indicate the real value of the label associated at the test_data[i] (or data_test[i]) -> is real class (row)
+        # predictions[i] indicate the class value predicted by the model for the test_data[i] (or data_test[i]) -> is predicted class (column)
         # the values are in categorical format, translate in int
         conf_matrix[np.argmax(test_label[i])][np.argmax(predictions[i])] += 1                               # update value
         
@@ -627,9 +626,7 @@ def generator_test():
                 for i in range(rest):
                     data_tensor.append(img_rest_tensor[i])
                     label_tensor.append(label_rest_tensor[i])
-                yield tf.stack(data_tensor), tf.stack(label_tensor)                  # return the last batch
-                
-    gpu_memory_usage_threshold(threshold_VRAM)
+                yield tf.stack(data_tensor), tf.stack(label_tensor)                  # return the last batchs
 
 # ------------------ end: generetor function ------------------
 
@@ -683,7 +680,7 @@ def make_fit_model():
         # ---- fit the model -----
         print("------------------------ fit model ------------------------")
         
-        checkpoint = ModelCheckpoint(filepath = path_check_point_model+'/weight_seg_SirenNet_'+str(chosen_model)+".keras", verbose = 1, save_best_only = True, monitor='val_loss', mode='min') # val_loss, min, val_categorical_accuracy, max
+        checkpoint = ModelCheckpoint(filepath = path_check_point_model+'/weight_seg_SirenNet_'+str(chosen_model)+"_batch_"+str(batch_size)+".keras", verbose = 1, save_best_only = True, monitor='val_loss', mode='min') # val_loss, min, val_categorical_accuracy, max
         eStop = EarlyStopping(patience = early_patience, verbose = 1, restore_best_weights = True, monitor='val_loss')
         
         # -- calculate steps for the sets --
@@ -733,11 +730,13 @@ def make_fit_model():
     end_all_time = time.time()                              # end time for all training
     
     # plot and calculate the mean in case of number of fit test done
-    if n_test > 1:
+    if num_test > 1:
         plot_accuracy_and_loss(history_train, history_val, history_test)
         print_average_metrics(history_train, history_val, history_test)
+        compute_confusion_matrix(network, test_set, test_step, classes)         # call method to obtain the confusion matrix 
     
     print(f"Time for training all the tests: ", format_time(end_all_time - start_all_time))
+    print_fit_param()           # print for se the used parameters
     print("------------------------------------------------")
 
 # ------------------------------------ main ------------------------------------        
