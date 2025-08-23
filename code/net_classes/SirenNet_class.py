@@ -83,8 +83,8 @@ class SirenNet:
             inp = layers.Input(shape=(self.img_width, self.img_height, self.img_channel))       # input
             # 1st Conv layer 
             # - double branch to get both temporal and spectral features.
-            branch_1 = layers.Conv2D(16, (1, k_s_freq), padding="same", activation="relu")(inp) # frequency
-            branch_2 = layers.Conv2D(16, (k_s_time, 1), padding="same", activation="relu")(inp) # temporal
+            branch_1 = layers.Conv2D(8, (1, k_s_freq), padding="same", activation="relu")(inp) # frequency
+            branch_2 = layers.Conv2D(8, (k_s_time, 1), padding="same", activation="relu")(inp) # temporal
             branches = layers.Concatenate(axis=-1)([branch_1, branch_2])                        # concatenate
             # - conv
             net  = layers.Conv2D(32, (3, 3), padding="same", activation="relu")(branches)       # fusion
@@ -94,23 +94,21 @@ class SirenNet:
             k_s_freq = k_s_freq * 2  
             k_s_time = k_s_time * 2
             # - double branch to get both temporal and spectral features.
-            branch_1 = layers.Conv2D(32, (1, k_s_freq), padding="same", activation="relu")(net) # frequency
-            branch_2 = layers.Conv2D(32, (k_s_time, 1), padding="same", activation="relu")(net) # temporal
+            branch_1 = layers.Conv2D(16, (1, k_s_freq), padding="same", activation="relu")(net) # frequency
+            branch_2 = layers.Conv2D(16, (k_s_time, 1), padding="same", activation="relu")(net) # temporal
             branches = layers.Concatenate(axis=-1)([branch_1, branch_2])
             # - conv
             net = layers.Conv2D(64, (3,3), padding="same", activation="relu")(branches)
             # -- maxpool
-            pool_time = layers.MaxPooling2D(pool_size=(2,1))(net)                               # Pooling on time
             pool_freq = layers.MaxPooling2D(pool_size=(1,2))(net)                               # Pooling on frequency
-            pools = layers.Concatenate(axis=-1)([pool_time, pool_freq])                         # concatenate
             
             # 3rd layer - inception modules
-            net = inception_mod(pools, fil_1x1=16, fil_1x1_3x3=8, fil_3x3=32, fil_1x1_5x5=16, fil_5x5=32, fil_m_pool=32)    # first inception layer
+            net = inception_mod(pool_freq, fil_1x1=16, fil_1x1_3x3=8, fil_3x3=32, fil_1x1_5x5=16, fil_5x5=32, fil_m_pool=32)    # first inception layer
             net = inception_mod(net, fil_1x1=32, fil_1x1_3x3=16, fil_3x3=64, fil_1x1_5x5=16, fil_5x5=32, fil_m_pool=64)     # second inception layer
             net = layers.MaxPooling2D(3, strides=2)(net)                                                                    # max pool (quadratic)
             
             # 4th layer - inception modules
-            net = inception_mod(net, fil_1x1=64, fil_1x1_3x3=16, fil_3x3=128, fil_1x1_5x5=8, fil_5x5=16, fil_m_pool=16)     # third inception layer
+            net = inception_mod(net, fil_1x1=64, fil_1x1_3x3=16, fil_3x3=64, fil_1x1_5x5=8, fil_5x5=16, fil_m_pool=16)     # third inception layer
             net = layers.GlobalAveragePooling2D()(net)                                                                      # avg pool
             
             # 1th dense layer
