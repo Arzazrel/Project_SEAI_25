@@ -162,7 +162,7 @@ class SirenNet:
     
     MaxPools are also initially rectangular in time (k,1). This supports the idea that spectral information is very delicate.
     Compressing along the frequency too early risks "crushing" important formants or harmonic patterns.
-    However, over time, you can afford to reduce the resolution because you have "redundancy"—nearby time frames often contain similar information.
+    However, over time, you can afford to reduce the resolution because you have "redundancy—nearby" time frames often contain similar information.
     
     Rectangular filter patterns:
     - In the first layers: smaller filters -> capture local details without mixing too much (few bands, few frames).
