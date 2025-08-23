@@ -85,6 +85,16 @@ erase_copy_ds = False           # if 'true' -> if the dataset copy folder is alr
 
 # ------------------------------------ start: utilities method ------------------------------------
    
+# save in other format for compatibility
+def save_model_compatibily_format():
+    model_path = path_check_point_model + '/weight_seg_SirenNet_' + str(chosen_model) + "_batch_" + str(batch_size)
+    model_path_keras = model_path + ".keras" 
+    
+    model_keras = keras.models.load_model(model_path_keras)               # load the .keras model
+    
+    model.save(model_path + ".h5")     # save in .h5 format
+    model.save(model_path + "savedmodel", save_format="tf")   # saved in SavedModel format (for TensorFlow/Vitis compatibility)
+   
 # method to print the relevant training parameter
 def print_fit_param():
     print("Trained SirenNet version ",chosen_model, " for ",num_test, " times.")
@@ -744,6 +754,7 @@ if __name__ == "__main__":
     GPU_check()             # set GPU
     load_and_save_ds()      # loand ds, extract features and write it on disk
     make_fit_model()        # train
+    save_model_compatibily_format() # save trained model in other format to compatibility
     
 """
 IMPORTANTE
