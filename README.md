@@ -71,10 +71,10 @@ From the dataset, I decided to implement the commands listed below, along with t
 - 'backward': go backward within the track/movie
 - 'stop': stop audio/movie track playback
 - 'go': start playing the audio track/movie
-- 'up': moves up between audio tracks/programs
-- 'down': moves down through audio tracks/programs
-- 'left': moves left between audio tracks/programs
-- 'right': moves right between audio tracks/programs
+- 'up': turn up the volume
+- 'down': turn down the volume
+- 'left': moves to the next audio track/movie
+- 'right': moves to the previus audio track/movie
 
 All other words belog to the class 'unknown'.
 With this division, approximately 75% of the dataset will belong to the 'unknown' class with the remaining 25% split almost equally among the 7 command classes 
@@ -151,12 +151,12 @@ These spectral features can be viewed as 2D images with which to train the netwo
 To obtain these features, we must first set the sample rate (in this case, 16 kHz) and their duration (in this case, 1 s).
 Then, we need to calculate the STFT to obtain the spectral information that can then be further processed (to obtain MEL and MFCC).
 	
-####STFT (Short-time Fourier transform): 
+#### STFT (Short-time Fourier transform): 
 Breaks the signal into overlapping windows and performs the FFT on each window. In this case 16 kHz for 1 s with frame_length = 256 (~16 ms) and frame_step = 128 (~8 ms hops).
 The spectrogram has the form [num_frames, num_freq_bins] (it can be considered as 2D image), with num_freq_bins = 256 / 2 + 1 = 129. 
 We use the modulus (amplitude) of the STFT.
     
-#####Mel-Spectrogram 
+#### Mel-Spectrogram 
 It is closer to human perception then STFT. Project the linear spectrum onto 64 Mel bands (more perceptual).
 First, we calculate the SFTF module and then project it with the Mel filter matrix (which imitates human auditory perception), applying a set of triangular filters.
 	
@@ -181,7 +181,7 @@ Frequencies < 80 Hz -> are useless/noisy and are of no help in the KWS case.
 Frequencies > 7600 Hz -> have almost no useful information for speech (more noise, less discrimination between words).
 The 80–7600 Hz range captures virtually all the phonetic information needed to recognize voice commands.
 
-####MFCC used to obtain compact features (used in lightweight KWS models).
+#### MFCC used to obtain compact features (used in lightweight KWS models).
 When calculating MFCCs (Mel-Frequency Cepstral Coefficients):
 1) Start with the spectrum;
 2) Switch to the Mel scale and take its log;
