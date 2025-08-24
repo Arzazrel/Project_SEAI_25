@@ -169,8 +169,10 @@ In this case, I applied:
 		
 - fmax = 7600 Hz 
 	fmax is typically ≈ Nyquist limit. Nyquist limit, also known as the Nyquist frequency, is a crucial concept in signal processing that dictates the 
-	minimum sampling rate needed to accurately represent a signal. Nyquist frequency limit = sampling rate / 2 -> in this case Nyquist = 16 kHz / 2 = 8 kHz
-	This means that you cannot correctly represent frequencies above 8 kHz, because they will overlap (alias) with lower frequencies.
+	minimum sampling rate needed to accurately represent a signal. Nyquist frequency limit = sampling frequency / 2 -> in this case Nyquist = 16 kHz / 2 = 8 kHz
+	The sampling frequency is the rate at which samples of a signal are taken, measured in samples per second (Hz ) and it must be at least twice the highest frequency 
+	component of the signal. The dataset used in this project has sampling frequency of 16 kHz for the audio file, this means that you cannot correctly represent 
+	frequencies above 8 kHz, because they will overlap (alias) with lower frequencies.
 		
 	A slightly lower Nyquist limit (in this case, 7600 Hz) is often used to:
 	- avoid aliasing or instability near the Nyquist limit,
@@ -181,8 +183,8 @@ Frequencies < 80 Hz -> are useless/noisy and are of no help in the KWS case.
 Frequencies > 7600 Hz -> have almost no useful information for speech (more noise, less discrimination between words).
 The 80–7600 Hz range captures virtually all the phonetic information needed to recognize voice commands.
 
-#### MFCC used to obtain compact features (used in lightweight KWS models).
-When calculating MFCCs (Mel-Frequency Cepstral Coefficients):
+#### MFCC (Mel-Frequency Cepstral Coefficients)
+MFCC used to obtain compact features (used in lightweight KWS models). When calculating MFCCs:
 1) Start with the spectrum;
 2) Switch to the Mel scale and take its log;
 3) Apply a DCT (Discrete Cosine Transform) and obtain the MFCC coefficients.
@@ -227,7 +229,9 @@ Paragraph showing the best results obtained for all versions of Siren Net tested
 #### Version 1:
 
 	First training done only once, it does not have much statistical solidity but it gives a first look at performance and training times.
-	Time for training
+	Time for training 9:31:30
+	The training, validation, and test set accuracy are all between 98% and 99%. In particular, the test accuracy is 98.68%.
+	(More accurate results are in the '\results\train_1\SirenNet_vers_1' folder).
 
 ## **Developer's notes**  
   
