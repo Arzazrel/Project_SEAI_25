@@ -48,6 +48,7 @@ num_mel_bins = 64               # num of bins for Mel-spectrogram
 num_mfccs = 13                  # num of coefficient to take
 mel_f_min = 80.0                # min frequency for the bins of MEL 
 mel_f_max = 7600.0              # max frequency for the bins of MEL (or desired_sr/2)
+desire_audio_len = 1            # indicates the desired length of the audio in the database
 
 # -- command set var --
 command_set = ['forward', 'backward', 'stop','go','up','down','left','right']   # array containing all the target commands
@@ -327,14 +328,14 @@ def load_and_save_ds():
                         np.save(out_path, data)                             # save the data
                            
                         total_audio_ds.append(out_path)                     # add data path to the list
+                        total_labels.append(index)          # add related label index to the list
 
                     except Exception as e:
                         print("Errore con file:", file_path, e)
                         
-                if not do_preprocessing and filename.endswith(".npy"):   # only read the preprocessed dataset
+                elif not do_preprocessing and filename.endswith(".npy"):   # only read the preprocessed dataset
                         total_audio_ds.append(os.path.join(sub_path,filename))  # add data path to the list
-                        
-                total_labels.append(index)          # add related label index to the list
+                        total_labels.append(index)          # add related label index to the list
     
     # convert in numpy array
     total_audio_ds = np.array(total_audio_ds)
@@ -361,8 +362,8 @@ def extract_features(waveform, sample_rate):
     if sample_rate != desired_sr:       # check frequency 
         waveform = tfio.audio.resample(waveform, rate_in=tf.cast(sample_rate, tf.int64), rate_out=desired_sr)   # Resample a 16kHz mono
         
-    desired_len = desired_sr                # 1 s = desired_sr -> num_samples = frequency -> in this case 16000 samples
-    curr_len = tf.shape(waveform)[0]        # 
+    desired_len = desire_audio_len * desired_sr     # 1 s = desired_sr -> num_samples = frequency -> in this case 16000 samples
+    curr_len = tf.shape(waveform)[0]                # get the lenght of the audio (= sr * seconds)
 
     waveform = waveform[:desired_len]               # If too long → Truncate to 1 second (desired_sr samples)
     pad_len = desired_len - tf.shape(waveform)[0]   # If too short → pad with zeros up to 1 second (desired_sr samples)
