@@ -157,9 +157,6 @@ def ask_number_of_tracks():
 
 def ask_class_choice():
     while True:
-        print("\nAvailable classes:")
-        for i, cls in enumerate(classes):
-            print(f"{i}: {cls}")
         choice = input("Enter the name of the class you want to add a track from: ").strip()
         if choice in classes:
             return choice
@@ -176,6 +173,10 @@ def main_cicle():
             break
 
         selected_tracks = []                        # the audio track selected
+        
+        print("\nAvailable classes:")
+        for i, cls in enumerate(classes):
+            print(f"{i}: {cls}")
 
         for i in range(num_tracks):
             print(f"\nSelecting track {i+1} of {num_tracks}:")
