@@ -8,6 +8,7 @@ import os
 import time
 import random
 import math
+import soundfile as sf
 import numpy as np
 import pandas as pd
 import tensorflow_io as tfio  
@@ -28,7 +29,7 @@ ds_name = "speech_ds"           # folder name for the target dataset
 path_dir_ds = os.path.join(dir_father,dir_ds_name,ds_name)# folder containing the dataset to load (nested dataset)
 
 ds_audio_name = "long_audio"    # name of the folder containing the dataset of the long audio to classify (find command)
-path_dir_ds_audio = path_dir_ds = os.path.join(dir_father,dir_ds_name,ds_audio_name)# folder containing the dataset of the long audio file
+path_dir_ds_audio = os.path.join(dir_father,dir_ds_name,ds_audio_name)# folder containing the dataset of the long audio file
 
 dir_model_name = "model"            # folder in which there are saved the CNN model
 trained_dir_model_name = "trained"  # folder in which there are saved the trained CNN model
@@ -38,8 +39,13 @@ model_path = os.path.join(path_dir_model,model_name)    # path of the trained mo
 
 # -- audio file var --
 desired_sr = 16000              # want audio as 16kHz mono
+num_mel_bins = 64               # num of bins for Mel-spectrogram
+num_mfccs = 13                  # num of coefficient to take
+mel_f_min = 80.0                # min frequency for the bins of MEL 
+mel_f_max = 7600.0              # max frequency for the bins of MEL (or desired_sr/2)
 window_size = 1                 # indicates the length window (chunks) for the audio file (in s)
 step_size = 0.5                 # indicates the step for next window for the audio file (in s)
+desire_audio_len = 1            # indicates the desired length of the audio in the database
 truncate = False                # If the audio file is not perfectly divisible by the interval in seconds of the chunks, 
                                 # indicate whether to truncate the last chunk or to do the padding.
 cooldown = 2                    # number of windows to skip after detecting a command
@@ -138,7 +144,8 @@ def get_audio_random():
     if not long_audio_files:
         return None  
     index = random.randint(0, len(long_audio_files) - 1)
-    return long_audio_files[index]
+    return os.path.join(path_dir_ds_audio, long_audio_files[index])
+    
 # ------------------------------------ end: dataset method ------------------------------------
 
 # ------------------------------------ start: plot method ------------------------------------
@@ -229,17 +236,17 @@ def extract_features(waveform, sample_rate):
 def find_command_from_audio():
     # sliding window parameters
     win_size = desired_sr * window_size     # default = 1 s (same length of the audio in the dataset)
-    hop_size = desired_sr // step_size      # dafault = 0.5 s (half of the audio lenght)
+    hop_size = int(desired_sr * step_size)  # dafault = 0.5 s (half of the audio lenght)
     
     # var to plot
     probs_all = []
     times = []
     
     chosen_audio = get_audio_random()       # get a random long audio
-    waveform, sr = sf.read(chosen_audio)    # load audio file
-    
-    if waveform.ndim > 1:                   # stereo -> mono
-        waveform = np.mean(waveform, axis=1)
+    audio = tf.io.read_file(chosen_audio)
+    waveform, sr = tf.audio.decode_wav(audio, desired_channels=1)
+    waveform = tf.squeeze(waveform, axis=-1)
+    sr = int(sr.numpy())
     
     if sr != desired_sr:                    # resampling
         waveform = tfio.audio.resample(waveform, rate_in=sr, rate_out=desired_sr).numpy()
@@ -259,6 +266,7 @@ def find_command_from_audio():
         
     print(f"Audio input: {len(waveform)/desired_sr:.2f} s, finestre = {num_frames}")
     
+    num_frames = int(num_frames)
     skip = 0
     # scann al the windows
     for i in range(num_frames):
@@ -266,8 +274,8 @@ def find_command_from_audio():
             skip -= 1
             continue
         
-        start = i * hop_size        # calculate the start of the current window
-        end = start + win_size      # calculate the end of the current window
+        start = int(i * hop_size)   # calculate the start of the current window
+        end = int(start + win_size) # calculate the end of the current window    
         chunk = waveform[start:end] # create the chunk (window)
         center_time = (start + end) / 2 / desired_sr    # time to plot the prediction
 
@@ -302,6 +310,12 @@ if __name__ == "__main__":
     GPU_check()             # set GPU
     load_model()            # load the trained model
     load_class_index()      # load the correct indeces for the classes
-    read_audio_files()
+    read_audio_files()      # read all the long audio files
     
+    while True:
+        find_command_from_audio()   # take a new file and analyze it
+    
+        response = input("Do you want to continue?? (yes/no): ").strip().lower() # ask to the user
+        if response != "yes":
+            break
     
