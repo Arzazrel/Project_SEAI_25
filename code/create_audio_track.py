@@ -23,6 +23,9 @@ path_dir_ds = os.path.join(dir_father,dir_ds_name,ds_name)# folder containing th
 ds_audio_name = "long_audio"    # name of the folder containing the dataset of the long audio to classify (find command)
 path_dir_ds_audio = os.path.join(dir_father,dir_ds_name,ds_audio_name)# folder containing the dataset of the long audio file
 
+logfile_name = "track_audio_log.txt"                        # name of the log file
+path_logfile = os.path.join(path_dir_ds_audio,logfile_name) # path for the log file
+
 # -- audio file var --
 desired_sr = 16000              # want audio as 16kHz mono
 desire_audio_len = 1            # indicates the desired length of the audio (chunks) in the database
@@ -38,17 +41,21 @@ generic_class_name = "unknown"  # name for the generic class containing all the 
 classes = []                    # the label associated with each class will be the position that the class name will have in this array
 audio_paths_per_class = [[]]    # global list of audio file path lists for each class, index matches the class index in 'classes'
 
+enable_log = True               # if 'true' writes the explanation of the created audio track in the log , if 'false' doesn't write the explanation
+
 # ------------------------------------ end: global var ------------------------------------
 
-# funzione per prendere un file casuale da una classe
+# function to get a random file of a specific class passed as a paramete
 def get_random_file(class_name):
-    if class_name not in classes:
+    if class_name not in classes:               # control check
         raise ValueError(f"Clas {class_name} not found!")
-    index = classes.index(class_name)
-    return random.choice(audio_paths_per_class[index])
+    index = classes.index(class_name)           # get the class index
+    
+    return random.choice(audio_paths_per_class[index])  # return the random audio file
 
+# function that loads all the names of the audio files present in the DB divided by their class
 def load_ds():
-    global path_dir_ds, classes, total_audio_ds, total_labels, command_set, generic_class_name, copy_ds_name, path_dir_copy_ds
+    global path_dir_ds, classes, command_set, generic_class_name
     
     classes.append(str(generic_class_name))     # add the generic class containing all the classes that aren't target commands
     audio_paths_per_class.append([])            # create empty list for generic class
@@ -95,12 +102,12 @@ def prepare_tracks_for_concat_tf(selected_tracks):
 
     for cls, path in selected_tracks:
         try:
-            # Legge il file
+            # read audio file
             audio = tf.io.read_file(path)
             waveform, sample_rate = tf.audio.decode_wav(audio, desired_channels=1)
             waveform = tf.squeeze(waveform, axis=-1)  # rimuove canale singolo
 
-            # Resample se necessario
+            # Resample if necessary
             if sample_rate != desired_sr:
                 waveform = tfio.audio.resample(waveform, rate_in=tf.cast(sample_rate, tf.int64), rate_out=desired_sr)
 
@@ -110,10 +117,8 @@ def prepare_tracks_for_concat_tf(selected_tracks):
             pad_len = desired_len - tf.shape(waveform)[0]
             waveform = tf.pad(waveform, [[0, pad_len]])
 
-            # Normalizzazione [-1,1]
-            waveform = waveform / (tf.reduce_max(tf.abs(waveform)) + 1e-9)
-
-            processed_tracks.append(waveform.numpy())
+            waveform = waveform / (tf.reduce_max(tf.abs(waveform)) + 1e-9)  # normalization [-1,1]
+            processed_tracks.append(waveform.numpy())                       # add to list
 
         except Exception as e:
             print(f"Error loading file {path}: {e}")
@@ -139,8 +144,34 @@ def concat_fixed_tracks(tracks, output_path, sr=desired_sr):
 
 # ------------------------------------ end: methods to work on audio track ------------------------------------ 
 
+# ------------------------------------ start: utilities method ------------------------------------ 
+
+# method that writes the composition of the created tracks to the log file.
+def log_to_file(selected_tracks, track_name, enable_log=True):
+
+    if not enable_log:      # control check
+        return
+    
+    # Line construction: name_audio_track -> [ class (start - send s) , ... ] -- number of command in audio track
+    num_command = 0                     # indicate the number of command to recognize in the audio file
+    line = str(track_name) + " -> ["
+    for i, (cls, path) in enumerate(selected_tracks):
+        line += str(cls) + " (" + str(i*desire_audio_len) + "s - " + str((i+1)*desire_audio_len) + "s)"
+        if i != len(selected_tracks)-1:
+            line += ", "
+        if cls in classes and cls != generic_class_name:
+            num_command += 1
+
+    line += "] -- num of command in the audio track: " + str(num_command) + "\n"
+    
+    # Scrittura su file in append
+    with open(path_logfile, "a", encoding="utf-8") as f:
+        f.write(line)
+        
+# ------------------------------------ end: utilities method ------------------------------------ 
         
 # ------------------------------------ start: methods for GUI ------------------------------------
+# method which asks the user how many tracks he wants to merge
 def ask_number_of_tracks():
     while True:
         user_input = input("Enter the number of tracks to combine (or type 'exit' to quit): ").strip()
@@ -155,6 +186,7 @@ def ask_number_of_tracks():
         except ValueError:
             print("Invalid input. Please enter a positive integer greater than 1.")
 
+# method that asks for the desired class for the current track
 def ask_class_choice():
     while True:
         choice = input("Enter the name of the class you want to add a track from: ").strip()
@@ -162,7 +194,8 @@ def ask_class_choice():
             return choice
         else:
             print("Invalid class name. Please choose a class from the list above.")
-            
+        
+# metho for the main cicle        
 def main_cicle():
     print("Welcome! Type 'exit' at any prompt to quit the program.")
     
@@ -174,18 +207,20 @@ def main_cicle():
 
         selected_tracks = []                        # the audio track selected
         
-        print("\nAvailable classes:")
+        print("\n -- Available classes:")
         for i, cls in enumerate(classes):
             print(f"{i}: {cls}")
+        print("--\n")
 
-        for i in range(num_tracks):
+        for i in range(num_tracks):     
             print(f"\nSelecting track {i+1} of {num_tracks}:")
             class_name = ask_class_choice()
             if class_name == "exit":
                 print("Exiting the program. Goodbye!")
                 return
+                
             track_path = get_random_file(class_name)                    # get random file from chosen class
-            selected_tracks.append((class_name, track_path))
+            selected_tracks.append((class_name, track_path))            # add the chosen class name and audio path
             print(f"Selected: {track_path} from class '{class_name}'")
 
         print("\nAll selected tracks:")
@@ -194,16 +229,17 @@ def main_cicle():
         
         break;
           
-    if num_tracks != "exit" and class_name != "exit":
+    if num_tracks != "exit" and class_name != "exit":   # all ok, ask the name of the audio file to be created
         output_name = input("\nEnter the name of the output audio file (without extension, or type 'exit' to quit): ").strip()
         if output_name.lower() == "exit":
             print("Exiting the program. Goodbye!")
             return
         
-        output_path = os.path.join(path_dir_ds_audio,output_name + ".wav")
+        output_path = os.path.join(path_dir_ds_audio,output_name + ".wav")  # create the output path for the created audio file
         
-        tracks_array = prepare_tracks_for_concat_tf(selected_tracks)
-        concat_fixed_tracks(tracks_array, output_path)
+        tracks_array = prepare_tracks_for_concat_tf(selected_tracks)    # list for the preparated track to concatenate
+        concat_fixed_tracks(tracks_array, output_path)                  # concatenate the tracks
+        log_to_file(selected_tracks, output_name, enable_log)                         # append new line in the log file
     
 # ------------------------------------ end: methods for GUI ------------------------------------
 
