@@ -95,18 +95,18 @@ def load_model():
     global network
     
     try:
-        network = tf.keras.models.load_model(model_path)
+        network = tf.keras.models.load_model(model_path)        # load trained model
         print("Model ",str(model_path)," loaded successfully")
     except (OSError, IOError) as e:
         network = None
         print(f"Errore nel caricamento del modello: {e}")
-        sys.exit(1)                     # exit to prorgam
+        sys.exit(1)                                             # exit to prorgam
         
 # ------------------------------------ end: utilities method ------------------------------------
     
 # ------------------------------------ start: dataset method ------------------------------------
     
-# method to understand the correct index for each class. It use the dataset and the classes used for the training
+# method to understand the correct index for each class. It use the dataset and the classes used for the training. the correct classes indeces depends on the sort of the classes in the dataset.
 def load_class_index():
     global classes, labels_index, generic_class_name
     
@@ -115,36 +115,49 @@ def load_class_index():
     print("-------------------- READING DS --------------------")   # status print
     print("Read the DS: ",path_dir_ds) # status print
     
-    entries = os.listdir(path_dir_ds)                   # Get the list of items in the parent folder
+    entries = os.listdir(path_dir_ds)               # Get the list of items in the parent folder
     subfolders = [f for f in entries if os.path.isdir(os.path.join(path_dir_ds, f))]    # Check if there are subfolders 
  
     if subfolders:          # there are sub-folders -> (nested dataset)
         for sub in entries:             # scroll through each subfolder
             
-            if sub in command_set:                      # is a target command, add the class 
-                classes.append(str(sub))                # update classes   
+            if sub in command_set:                  # is a target command, add the class 
+                classes.append(str(sub))            # update classes   
      
-    print("\n---- dataset reading completed ----")    # control data print
+    print("\n---- dataset reading completed ----")  # control data print
     print("\n-- Classes statistics --")
     print("Num of classes: ",len(classes))
     for i in range(len(classes)):
         print("class name: ",classes[i])
+    print("----------------------------------------")
               
 # method to read all the long audio file
 def read_audio_files():
     global long_audio_files
     
     for filename in os.listdir(path_dir_ds_audio):
-        if filename.endswith(".wav"):
-            long_audio_files.append(filename)
+        if filename.endswith(".wav"):           # check if is an audio file
+            long_audio_files.append(filename)   # load the current audio file
 
 # takes a random audio file from the list of long audio files
 def get_audio_random():
     
-    if not long_audio_files:
+    if not long_audio_files:        # check loaded audio files
         return None  
-    index = random.randint(0, len(long_audio_files) - 1)
-    return os.path.join(path_dir_ds_audio, long_audio_files[index])
+    index = random.randint(0, len(long_audio_files) - 1)            # calculate random index
+    return os.path.join(path_dir_ds_audio, long_audio_files[index]) # get the random audio file
+    
+# get all the loaded audio file
+def get_audio_list():
+    path_list = []                  # list for the all loaded audio file
+    
+    if not long_audio_files:        # check loaded audio files
+        return None  
+
+    for i, text in enumerate(long_audio_files):
+        path_list.append(os.path.join(path_dir_ds_audio, long_audio_files[i]))  # calculate and append all the path
+        
+    return path_list
     
 # ------------------------------------ end: dataset method ------------------------------------
 
@@ -157,10 +170,10 @@ def plot_probabilities(times, probs_all, classes):
     for ci, cls in enumerate(classes):
         plt.plot(times, probs_all[:, ci], label=cls, linewidth=1.5)
     
-    plt.xlabel("Tempo (s)")
-    plt.ylabel("Probabilità")
-    plt.title("Probabilità predetta per finestra")
-    plt.ylim(0, 1)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Probability")
+    plt.title("Predicted probability per window")
+    plt.ylim(-0.1, 1.1)                             # a slightly larger range of probabilities to better see the lines at the maximum and minimum point
     plt.legend(loc="upper right")
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.tight_layout()
@@ -170,21 +183,20 @@ def plot_probabilities(times, probs_all, classes):
 def plot_heatmap(times, probs_all, classes):
     plt.figure(figsize=(12, 6))
 
-    # probs_all: shape [num_frames, num_classes]
-    # Trasponiamo per avere classi sull'asse Y
+    # probs_all: shape [num_frames, num_classes], transpose to have classes on the Y-axis
     plt.imshow(
         probs_all.T, 
         aspect='auto', 
         origin='lower',
-        extent=[times[0], times[-1], 0, len(classes)],
+        extent=[0, times[-1] + (times[1] - times[0]), 0, len(classes)],
         cmap="viridis"
     )
 
-    plt.colorbar(label="Probabilità")
-    plt.yticks(np.arange(len(classes)) + 0.5, classes)  # centro delle celle
-    plt.xlabel("Tempo (s)")
-    plt.ylabel("Classi")
-    plt.title("Heatmap probabilità nel tempo")
+    plt.colorbar(label="Probability")
+    plt.yticks(np.arange(len(classes)) + 0.5, classes)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Classes")
+    plt.title("Heatmap probability over time")    
     plt.tight_layout()
     plt.show()
 
@@ -233,16 +245,15 @@ def extract_features(waveform, sample_rate):
 # ------------------------------------ end: methods for extract features ------------------------------------
 
 # method to detect commands within the audio
-def find_command_from_audio():
+def find_command_from_audio(chosen_audio):
     # sliding window parameters
     win_size = desired_sr * window_size     # default = 1 s (same length of the audio in the dataset)
     hop_size = int(desired_sr * step_size)  # dafault = 0.5 s (half of the audio lenght)
     
     # var to plot
-    probs_all = []
-    times = []
+    probs_all = []                          # contains all the probability for each window
+    times = []                              # contains the central time for each window
     
-    chosen_audio = get_audio_random()       # get a random long audio
     audio = tf.io.read_file(chosen_audio)
     waveform, sr = tf.audio.decode_wav(audio, desired_channels=1)
     waveform = tf.squeeze(waveform, axis=-1)
@@ -251,55 +262,62 @@ def find_command_from_audio():
     if sr != desired_sr:                    # resampling
         waveform = tfio.audio.resample(waveform, rate_in=sr, rate_out=desired_sr).numpy()
 
-    if len(waveform) < win_size:
+    if len(waveform) < win_size:            # lenght check
         if truncate:
-            return  # troppo corto, lo scarto
+            print("The chosen audio is too short and truncate is activated")
+            return                          # too short, drop it
         else:
-            waveform = np.pad(waveform, (0, win_size - len(waveform)))
+            waveform = np.pad(waveform, (0, win_size - len(waveform)))  # padding
             num_frames = 1
+            print("The chosen audio is too short, use padding.")
     else:
         if not truncate:
-            pad_len = ((len(waveform) - win_size) % hop_size)
-            if pad_len > 0:
-                waveform = np.pad(waveform, (0, pad_len))
-        num_frames = 1 + (len(waveform) - win_size) // hop_size
+            pad_len = ((len(waveform) - win_size) % hop_size)   
+            if pad_len > 0:                                     # check if padding is needed
+                waveform = np.pad(waveform, (0, pad_len))               # padding
         
-    print(f"Audio input: {len(waveform)/desired_sr:.2f} s, finestre = {num_frames}")
+        num_frames = 1 + (len(waveform) - win_size) // hop_size         # calculate the numbers of frames (windows)
+      
+    print("---- Start predition ----")
+    print(f"Audio input-> Name: {chosen_audio} , lenght: {len(waveform)/desired_sr:.2f} s, windows = {num_frames}")
     
     num_frames = int(num_frames)
-    skip = 0
+    skip = 0                        # set skip to 0, indicates the windows to skip after recognizing a command
     # scann al the windows
     for i in range(num_frames):
-        if skip > 0:    # che if skip the current window (after a command)
-            skip -= 1
-            continue
-        
+         
         start = int(i * hop_size)   # calculate the start of the current window
         end = int(start + win_size) # calculate the end of the current window    
         chunk = waveform[start:end] # create the chunk (window)
-        center_time = (start + end) / 2 / desired_sr    # time to plot the prediction
+        center_time = (start + end) / 2 / desired_sr    # time to plot the prediction (center of current window)
 
         # Estrai feature
         features = extract_features(chunk, desired_sr)  # extract features
-        features = np.expand_dims(features, axis=0)     # [1, width, height, channel]
+        features = np.expand_dims(features, axis=0)     # [1, width, height, channel] -> with mel and 1s window [1,124,64,1]
 
         # Predizione
-        probs = network.predict(features, verbose=0)[0]
-        pred_idx = np.argmax(probs)         # predict class (index)
-        conf = probs[pred_idx]              # confidence of the predict class (index)
+        probs = network.predict(features, verbose=0)[0] # predict the class of the current windows
+        pred_idx = np.argmax(probs)                     # get index of the class more likely
+        conf = probs[pred_idx]                          # confidence of the predict class
         
-        probs_all.append(probs)
-        times.append(center_time)
+        probs_all.append(probs)                         # add all the probs of the current window for the plots
+        times.append(center_time)                       # add the center time of current window for the plots
+        
+        if skip > 0:                # che if skip the current window (after a command)
+            skip -= 1
+            print("Skip window.")
+            continue
 
-        if conf > confidence_threshold and classes[pred_idx] != "unknown":
+        if conf > confidence_threshold and classes[pred_idx] != "unknown":  # check for confidence -> SEE NOTE 0
             start_ms = int(start / desired_sr * 1000)
             end_ms = int(end / desired_sr * 1000)
-            print(f"[{start_ms}-{end_ms} ms] -> {classes[pred_idx]} ({conf:.2f})")
+            print(f"Window {i} [{start_ms}-{end_ms} ms] -> {classes[pred_idx]} ({conf*100:.2f})")
             
             skip = cooldown                 # avoid to recognize again the same command
             
     probs_all = np.array(probs_all)     # convert in numpy array
     times = np.array(times)             # convert in numpy array
+    print("---- End predition ----")
 
     # plots
     plot_probabilities(times, probs_all, classes)   # plot results
@@ -312,10 +330,31 @@ if __name__ == "__main__":
     load_class_index()      # load the correct indeces for the classes
     read_audio_files()      # read all the long audio files
     
-    while True:
-        find_command_from_audio()   # take a new file and analyze it
+    response = input("Do you want to classify all the audio files or just some random ones? (all,random): ").strip().lower() # ask to the user
+    if response == "all":           # predict all audio file in the folder (test mode)
+        
+        if long_audio_files == None or len(long_audio_files) == 0:
+            print("There aren't audio file to classify.")
+        else:
+            path_list = get_audio_list()            # get the list of audio file path
+            # scan all audio file loaded
+            for audio in path_list:
+                find_command_from_audio(audio)      # take a new file and analyze it
+            
+    elif response == "random":      # predicts a random audio file until the user exits
+        while True:
+            chosen_audio = get_audio_random()       # get a random long audio
+            find_command_from_audio(chosen_audio)   # take a new file and analyze it
+        
+            response = input("Do you want to continue? (yes/no): ").strip().lower() # ask to the user
+            if response != "yes":
+                break
     
-        response = input("Do you want to continue?? (yes/no): ").strip().lower() # ask to the user
-        if response != "yes":
-            break
-    
+"""
+NOTE 0:
+    Based on the idea that if the classification works well, the closer the current window is to the window containing the command, the more the probability of that command 
+    will increase, peaking in the window corresponding to the command. Beside that probability decreases the further the current window moves from the command window.
+    We need a classification system that recognizes only the commands we want (everything else will be considered unknown, even those not fully recognized by the network).
+    Therefore, a certain confidence threshold is used (default 90%). To be recognized, a command must exceed the confidence threshold. 
+    To avoid recognizing the same command multiple times, there will be windows where the classification will not be considered.
+"""
