@@ -1,3 +1,7 @@
 track_go_0 -> [unknown (0s - 1s), go (1s - 2s), unknown (2s - 3s)] -- num of command in the audio track: 1
 track_left_0 -> [unknown (0s - 1s), left (1s - 2s), unknown (2s - 3s)] -- num of command in the audio track: 1
 track_go_1 -> [unknown (0s - 1s), unknown (1s - 2s), go (2s - 3s), unknown (3s - 4s), unknown (4s - 5s)] -- num of command in the audio track: 1
+track_down_0 -> [unknown (0s - 1s), unknown (1s - 2s), down (2s - 3s), unknown (3s - 4s), unknown (4s - 5s)] -- num of command in the audio track: 1
+long_empty_audio_0 -> [unknown (0s - 1s), unknown (1s - 2s), unknown (2s - 3s), unknown (3s - 4s), unknown (4s - 5s), unknown (5s - 6s), unknown (6s - 7s), unknown (7s - 8s), unknown (8s - 9s), unknown (9s - 10s), unknown (10s - 11s), unknown (11s - 12s), unknown (12s - 13s), unknown (13s - 14s), unknown (14s - 15s), unknown (15s - 16s), unknown (16s - 17s), unknown (17s - 18s), unknown (18s - 19s), unknown (19s - 20s)] -- num of command in the audio track: 0
+long_full_audio_0 -> [unknown (0s - 1s), unknown (1s - 2s), go (2s - 3s), left (3s - 4s), unknown (4s - 5s), unknown (5s - 6s), backward (6s - 7s), unknown (7s - 8s), unknown (8s - 9s), forward (9s - 10s), up (10s - 11s), down (11s - 12s), unknown (12s - 13s), unknown (13s - 14s), right (14s - 15s), unknown (15s - 16s), down (16s - 17s), unknown (17s - 18s), stop (18s - 19s), unknown (19s - 20s)] -- num of command in the audio track: 9
+multiple_commands_0 -> [unknown (0s - 1s), go (1s - 2s), down (2s - 3s), left (3s - 4s), unknown (4s - 5s)] -- num of command in the audio track: 3
