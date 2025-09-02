@@ -49,6 +49,8 @@ desire_audio_len = 1            # indicates the desired length of the audio in t
 truncate = False                # If the audio file is not perfectly divisible by the interval in seconds of the chunks, 
                                 # indicate whether to truncate the last chunk or to do the padding.
 cooldown = 2                    # number of windows to skip after detecting a command
+basic_cooldown = True           # if 'true' -> it indicates to use the basic cooldown method, which prevents any commands from being recognized after one has been recognized.
+                                # if 'false' -> it indicates to use the more advanced cooldown method, which, after a command has been recognized, blocks recognition only for the newly recognized class and not for the others.
                                 
 # -- classification var --
 confidence_threshold = 0.9      # indicates the minimum confidence threshold before detecting the command
@@ -244,10 +246,10 @@ def extract_features(waveform, sample_rate):
     
 # ------------------------------------ end: methods for extract features ------------------------------------
 
-# method to detect commands within the audio
+# method to detect commands within the audio. See the 'basic_cooldown' var that the indicatethe modality for the cooldown managing
 def find_command_from_audio(chosen_audio):
     # sliding window parameters
-    win_size = desired_sr * window_size     # default = 1 s (same length of the audio in the dataset)
+    win_size = desired_sr * window_size     # defaulttyi = 1 s (same length of the audio in the dataset)
     hop_size = int(desired_sr * step_size)  # dafault = 0.5 s (half of the audio lenght)
     
     # var to plot
@@ -281,6 +283,9 @@ def find_command_from_audio(chosen_audio):
     print("---- Start predition ----")
     print(f"Audio input-> Name: {chosen_audio} , lenght: {len(waveform)/desired_sr:.2f} s, windows = {num_frames}")
     
+    if not basic_cooldown:          # case with cooldown based on command
+        last_rec_command = None     # last recongnized command 
+        
     num_frames = int(num_frames)
     skip = 0                        # set skip to 0, indicates the windows to skip after recognizing a command
     # scann al the windows
@@ -303,12 +308,17 @@ def find_command_from_audio(chosen_audio):
         probs_all.append(probs)                         # add all the probs of the current window for the plots
         times.append(center_time)                       # add the center time of current window for the plots
         
-        if skip > 0:                # che if skip the current window (after a command)
+        if skip > 0:                 # skip the current window (after a command) in basic cooldown scenario
             skip -= 1
-            print("Skip window.")
-            continue
+            if basic_cooldown:
+                print("Skip window.")
+                continue
+            elif not basic_cooldown and pred_idx == last_rec_command and conf > confidence_threshold:
+                print("same command already recognized. skip window.")
+                continue
 
         if conf > confidence_threshold and classes[pred_idx] != "unknown":  # check for confidence -> SEE NOTE 0
+            last_rec_command = pred_idx                     # update index for the last recognized command
             start_ms = int(start / desired_sr * 1000)
             end_ms = int(end / desired_sr * 1000)
             print(f"Window {i} [{start_ms}-{end_ms} ms] -> {classes[pred_idx]} ({conf*100:.2f})")
