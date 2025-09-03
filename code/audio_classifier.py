@@ -53,8 +53,8 @@ step_size = 0.5                 # indicates the step for next window for the aud
 desire_audio_len = 1            # indicates the desired length of the audio in the database
 truncate = False                # If the audio file is not perfectly divisible by the interval in seconds of the chunks, 
                                 # indicate whether to truncate the last chunk or to do the padding.
-cooldown = 2                    # number of windows to skip after detecting a command
-basic_cooldown = True           # if 'true' -> it indicates to use the basic cooldown method, which prevents any commands from being recognized after one has been recognized.
+cooldown = 1                    # number of windows to skip after detecting a command
+basic_cooldown = False          # if 'true' -> it indicates to use the basic cooldown method, which prevents any commands from being recognized after one has been recognized.
                                 # if 'false' -> it indicates to use the more advanced cooldown method, which, after a command has been recognized, blocks recognition only for the newly recognized class and not for the others.
                                 
 # -- classification var --
@@ -125,7 +125,7 @@ def log_to_file(chosen_audio, audio_len, num_frames, t_segm, t_feat, t_inf, t_po
     current_date = datetime.now()   # get current date and time
     format_date = current_date.strftime("%d/%m/%Y %H:%M:%S")
     
-    text_to_write += "---- KWS on " + str(chosen_audio) + " , duration: " + str(audio_len) + " , windows: " + str(num_frames) + "in " + format_date + "---- \n"
+    text_to_write += "---- KWS on " + str(chosen_audio) + " , duration: " + str(audio_len) + " , windows: " + str(num_frames) + " in " + format_date + "---- \n"
     
     dict_segm = compute_stats(t_segm)   # get dictionary with statistics related segmentation time
     text_to_write += "Segmentation stats:\n"
