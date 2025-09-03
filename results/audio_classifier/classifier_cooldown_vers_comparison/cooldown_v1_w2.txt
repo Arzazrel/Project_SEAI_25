@@ -1,0 +1,156 @@
+---- KWS on ../dataset/long_audio/multiple_commands_0.wav , duration: 5.0 , windows: 9 in 03/09/2025 16:30:42---- 
+Segmentation stats:
+ - Mean (ms): 0.6285112224933174
+ - Min (ms): 0.553099999204278
+ - Max (ms): 0.7926000002771616
+ - Percentile 50 (ms): 0.6118010003119707
+ - Percentile 95 (ms): 0.7448400001972914
+ - Percentile 99 (ms): 0.7830480002611876
+Features extraction stats:
+ - Mean (ms): 31.90221988885767
+ - Min (ms): 30.261507999151945
+ - Max (ms): 33.74220900051296
+ - Percentile 50 (ms): 31.890309000387788
+ - Percentile 95 (ms): 33.309489000216125
+ - Percentile 99 (ms): 33.65566500045359
+Inference stats:
+ - Mean (ms): 54.70008166631063
+ - Min (ms): 53.07551499828696
+ - Max (ms): 56.625515999272466
+ - Percentile 50 (ms): 54.9402149990201
+ - Percentile 95 (ms): 56.30663559995592
+ - Percentile 99 (ms): 56.561739919409156
+Reecognition stats:
+ - Mean (ms): 0.025349999545142055
+ - Min (ms): 0.0019000004976987839
+ - Max (ms): 0.09459999948740005
+ - Percentile 50 (ms): 0.0033499998971819878
+ - Percentile 95 (ms): 0.0781849993392825
+ - Percentile 99 (ms): 0.09131699945777653
+General stats:
+ - Total segmentation time (ms): 5.6566010024398565
+ - Total features extraction time (ms): 287.119978999719
+ - Total inference time (ms): 492.30073499679565
+ - Total post time (ms): 0.20279999636113644
+Window stats:
+ - Mean time (ms): 87.25616277720675
+ - Min time (ms): 83.89202299714088
+ - Max time (ms): 91.25492499954998
+ -------------------------------------- 
+---- KWS on ../dataset/long_audio/multiple_commands_1.wav , duration: 5.0 , windows: 9 in 03/09/2025 16:31:45---- 
+Segmentation stats:
+ - Mean (ms): 0.5707888888816038
+ - Min (ms): 0.4910999983549118
+ - Max (ms): 0.7016000002622604
+ - Percentile 50 (ms): 0.524600001052022
+ - Percentile 95 (ms): 0.694479999691248
+ - Percentile 99 (ms): 0.7001760001480579
+Features extraction stats:
+ - Mean (ms): 32.787490110844374
+ - Min (ms): 31.76100199855864
+ - Max (ms): 35.98470100015402
+ - Percentile 50 (ms): 32.38220099918544
+ - Percentile 95 (ms): 34.89554100036621
+ - Percentile 99 (ms): 35.76686900019646
+Inference stats:
+ - Mean (ms): 55.243079444807435
+ - Min (ms): 53.36660199984908
+ - Max (ms): 58.242402002215385
+ - Percentile 50 (ms): 54.91330200061202
+ - Percentile 95 (ms): 57.7522416010499
+ - Percentile 99 (ms): 58.14436992198229
+Reecognition stats:
+ - Mean (ms): 0.017866667153106794
+ - Min (ms): 0.001499999314546585
+ - Max (ms): 0.05030000023543835
+ - Percentile 50 (ms): 0.003100000321865082
+ - Percentile 95 (ms): 0.049820001050829885
+ - Percentile 99 (ms): 0.050204000398516656
+General stats:
+ - Total segmentation time (ms): 5.137099999934435
+ - Total features extraction time (ms): 295.08741099759936
+ - Total inference time (ms): 497.18771500326693
+ - Total post time (ms): 0.16080000437796116
+Window stats:
+ - Mean time (ms): 88.61922511168652
+ - Min time (ms): 85.62020399607718
+ - Max time (ms): 94.9790030028671
+ -------------------------------------- 
+---- KWS on ../dataset/long_audio/multiple_same_command_down_0.wav , duration: 4.0 , windows: 7 in 03/09/2025 16:35:37---- 
+Segmentation stats:
+ - Mean (ms): 0.5598282851278782
+ - Min (ms): 0.5011999998241663
+ - Max (ms): 0.6522989999502897
+ - Percentile 50 (ms): 0.5434999968856573
+ - Percentile 95 (ms): 0.6407490000128746
+ - Percentile 99 (ms): 0.6499889999628067
+Features extraction stats:
+ - Mean (ms): 32.77183857187629
+ - Min (ms): 31.101196000352502
+ - Max (ms): 34.32159600034356
+ - Percentile 50 (ms): 33.017694998532534
+ - Percentile 95 (ms): 34.111896000616255
+ - Percentile 99 (ms): 34.2796560003981
+Inference stats:
+ - Mean (ms): 56.68592157135053
+ - Min (ms): 54.65269299969077
+ - Max (ms): 60.62059300020337
+ - Percentile 50 (ms): 56.594593001529574
+ - Percentile 95 (ms): 59.662332999706265
+ - Percentile 99 (ms): 60.42894100010395
+Reecognition stats:
+ - Mean (ms): 0.00924999980876843
+ - Min (ms): 0.0017999988049268723
+ - Max (ms): 0.04409999959170818
+ - Percentile 50 (ms): 0.002399999648332596
+ - Percentile 95 (ms): 0.033749999944120646
+ - Percentile 99 (ms): 0.04202999966219068
+General stats:
+ - Total segmentation time (ms): 3.9187979958951473
+ - Total features extraction time (ms): 229.402870003134
+ - Total inference time (ms): 396.80145099945366
+ - Total post time (ms): 0.05549999885261059
+Window stats:
+ - Mean time (ms): 90.02683842816346
+ - Min time (ms): 86.25688899867237
+ - Max time (ms): 95.63858800008893
+ -------------------------------------- 
+---- KWS on ../dataset/long_audio/multiple_same_command_go_0.wav , duration: 4.0 , windows: 7 in 03/09/2025 16:37:03---- 
+Segmentation stats:
+ - Mean (ms): 0.5982999998543944
+ - Min (ms): 0.4714999981224537
+ - Max (ms): 0.7394000012427568
+ - Percentile 50 (ms): 0.5832999981939793
+ - Percentile 95 (ms): 0.7300100009888411
+ - Percentile 99 (ms): 0.7375220011919736
+Features extraction stats:
+ - Mean (ms): 33.792023428316625
+ - Min (ms): 29.672407999634743
+ - Max (ms): 36.833210000768304
+ - Percentile 50 (ms): 34.69570899941027
+ - Percentile 95 (ms): 36.30443000048399
+ - Percentile 99 (ms): 36.72745400071144
+Inference stats:
+ - Mean (ms): 55.21254400057452
+ - Min (ms): 52.90541500039399
+ - Max (ms): 57.83291600085795
+ - Percentile 50 (ms): 54.16451500169933
+ - Percentile 95 (ms): 57.63530600015074
+ - Percentile 99 (ms): 57.79339400071651
+Reecognition stats:
+ - Mean (ms): 0.009683333337306976
+ - Min (ms): 0.001600002869963646
+ - Max (ms): 0.04690000042319298
+ - Percentile 50 (ms): 0.002299998886883259
+ - Percentile 95 (ms): 0.035950000397861004
+ - Percentile 99 (ms): 0.04471000041812659
+General stats:
+ - Total segmentation time (ms): 4.188099998980761
+ - Total features extraction time (ms): 236.5441639982164
+ - Total inference time (ms): 386.48780800402164
+ - Total post time (ms): 0.05810000002384186
+Window stats:
+ - Mean time (ms): 89.61255076208285
+ - Min time (ms): 83.05092300102115
+ - Max time (ms): 95.4524260032922
+ -------------------------------------- 

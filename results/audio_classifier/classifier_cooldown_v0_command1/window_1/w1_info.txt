@@ -1,0 +1,117 @@
+---- KWS on ../dataset/long_audio/track_down_0.wav , duration: 5.0 , windows: 9in 03/09/2025 14:32:25---- 
+Segmentation stats:
+ - Mean (ms): 0.5062205555538336
+ - Min (ms): 0.4375990000553429
+ - Max (ms): 0.6129979998804629
+ - Percentile 50 (ms): 0.49479900021106005
+ - Percentile 95 (ms): 0.5989179999567568
+ - Percentile 99 (ms): 0.6101819998957216
+Features extraction stats:
+ - Mean (ms): 32.88782488875505
+ - Min (ms): 30.186910999938846
+ - Max (ms): 35.56409499980509
+ - Percentile 50 (ms): 32.7650029999204
+ - Percentile 95 (ms): 35.00617659986019
+ - Percentile 99 (ms): 35.45251131981611
+Inference stats:
+ - Mean (ms): 52.23284500009484
+ - Min (ms): 50.4402499999851
+ - Max (ms): 54.6190380002372
+ - Percentile 50 (ms): 51.75364700006321
+ - Percentile 95 (ms): 54.43483880022541
+ - Percentile 99 (ms): 54.58219816023484
+Reecognition stats:
+ - Mean (ms): 0.007974875043146312
+ - Min (ms): 0.0020999996922910213
+ - Max (ms): 0.04819900030270219
+ - Percentile 50 (ms): 0.002250000135973096
+ - Percentile 95 (ms): 0.03216935023665426
+ - Percentile 99 (ms): 0.04499307028949259
+General stats:
+ - Total segmentation time (ms): 4.555984999984503
+ - Total features extraction time (ms): 295.99042399879545
+ - Total inference time (ms): 470.09560500085354
+ - Total post time (ms): 0.0637990003451705
+Window stats:
+ - Mean time (ms): 85.63486531944687
+ - Min time (ms): 81.06685999967158
+ - Max time (ms): 90.84433000022545
+ -------------------------------------- 
+---- KWS on ../dataset/long_audio/track_go_0.wav , duration: 3.0 , windows: 5in 03/09/2025 14:33:11---- 
+Segmentation stats:
+ - Mean (ms): 0.577439200039953
+ - Min (ms): 0.465998999774456
+ - Max (ms): 0.7006999999284744
+ - Percentile 50 (ms): 0.6190990004688501
+ - Percentile 95 (ms): 0.6873397999443114
+ - Percentile 99 (ms): 0.6980279599316418
+Features extraction stats:
+ - Mean (ms): 31.66858979994431
+ - Min (ms): 29.792071999982
+ - Max (ms): 34.83916600001976
+ - Percentile 50 (ms): 31.107569999992847
+ - Percentile 95 (ms): 34.20476679997519
+ - Percentile 99 (ms): 34.71228616001085
+Inference stats:
+ - Mean (ms): 53.354009199887514
+ - Min (ms): 52.39694999996573
+ - Max (ms): 54.92374800005928
+ - Percentile 50 (ms): 53.059849000070244
+ - Percentile 95 (ms): 54.73112820005044
+ - Percentile 99 (ms): 54.88522404005751
+Reecognition stats:
+ - Mean (ms): 0.014149999944493175
+ - Min (ms): 0.0019000004976987839
+ - Max (ms): 0.049999999813735485
+ - Percentile 50 (ms): 0.0023499997332692146
+ - Percentile 95 (ms): 0.04285999978892503
+ - Percentile 99 (ms): 0.048571999808773386
+General stats:
+ - Total segmentation time (ms): 2.887196000199765
+ - Total features extraction time (ms): 158.34294899972156
+ - Total inference time (ms): 266.77004599943757
+ - Total post time (ms): 0.0565999997779727
+Window stats:
+ - Mean time (ms): 85.61418819981627
+ - Min time (ms): 82.65692100021988
+ - Max time (ms): 90.51361399982125
+ -------------------------------------- 
+---- KWS on ../dataset/long_audio/track_left_0.wav , duration: 3.0 , windows: 5in 03/09/2025 14:34:48---- 
+Segmentation stats:
+ - Mean (ms): 0.5656799999065697
+ - Min (ms): 0.45889999996870756
+ - Max (ms): 0.8443999998271465
+ - Percentile 50 (ms): 0.48989999992772937
+ - Percentile 95 (ms): 0.7901999998837709
+ - Percentile 99 (ms): 0.8335599998384714
+Features extraction stats:
+ - Mean (ms): 31.349221200030296
+ - Min (ms): 28.444683000445366
+ - Max (ms): 35.2307790000923
+ - Percentile 50 (ms): 30.930782000068575
+ - Percentile 95 (ms): 34.74617920005694
+ - Percentile 99 (ms): 35.13385904008523
+Inference stats:
+ - Mean (ms): 51.967509400099516
+ - Min (ms): 50.622470000293106
+ - Max (ms): 52.80196800036356
+ - Percentile 50 (ms): 52.557969000190496
+ - Percentile 95 (ms): 52.773628200311215
+ - Percentile 99 (ms): 52.79630004035309
+Reecognition stats:
+ - Mean (ms): 0.014224999700672925
+ - Min (ms): 0.001999999862164259
+ - Max (ms): 0.049999999813735485
+ - Percentile 50 (ms): 0.002449999563395977
+ - Percentile 95 (ms): 0.04288999980781226
+ - Percentile 99 (ms): 0.04857799981255083
+General stats:
+ - Total segmentation time (ms): 2.8283999995328486
+ - Total features extraction time (ms): 156.74610600015149
+ - Total inference time (ms): 259.8375470004976
+ - Total post time (ms): 0.0568999988026917
+Window stats:
+ - Mean time (ms): 83.89663559973705
+ - Min time (ms): 79.52805300056934
+ - Max time (ms): 88.92714700009674
+ -------------------------------------- 
