@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from tensorflow.python.client import device_lib 
 import tensorflow as tf
 from tensorflow import keras
+from datetime import datetime
 # for plot
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
@@ -36,6 +37,10 @@ trained_dir_model_name = "trained"  # folder in which there are saved the traine
 path_dir_model = os.path.join(dir_father,dir_model_name,trained_dir_model_name)  # folder in which there are saved the model
 model_name = "SirenNet_1.keras"                         # nam of the model to use
 model_path = os.path.join(path_dir_model,model_name)    # path of the trained model to use
+
+dir_results_name = "results"    # name of the folder containing the results for this project
+logfile_name = "audio_classifier_log.txt"               # name of the log file
+path_logfile = os.path.join(dir_father,dir_results_name,logfile_name)   # path for the log file
 
 # -- audio file var --
 desired_sr = 16000              # want audio as 16kHz mono
@@ -66,6 +71,7 @@ classes = []                    # the label associated with each class will be t
 long_audio_files = []           # list containing all the names of long files (the ones from which to extract the commands)
 
 do_mfcc = False                 # if 'true' -> calculate and use MFCC , if 'false' -> donìt calculate MFCC and use MEL
+enable_log = True               # if 'true' -> writes statistics of the audio classification in the log , if 'false' -> doesn't write the explanation
 
 # ------------------------------------ end: global var ------------------------------------
 
@@ -104,6 +110,88 @@ def load_model():
         print(f"Errore nel caricamento del modello: {e}")
         sys.exit(1)                                             # exit to prorgam
         
+# method to get the time in milliseconds
+def now_ms():
+    return time.perf_counter() * 1000.0     # milliseconds
+    
+# method that writes the results of the audio_classifier to the log file.
+def log_to_file(chosen_audio, audio_len, num_frames, t_segm, t_feat, t_inf, t_post, enable_log=True):
+
+    if not enable_log:      # control check
+        return
+        
+    text_to_write = ""      # set the log text to write in the log file
+    
+    current_date = datetime.now()   # get current date and time
+    format_date = current_date.strftime("%d/%m/%Y %H:%M:%S")
+    
+    text_to_write += "---- KWS on " + str(chosen_audio) + " , duration: " + str(audio_len) + " , windows: " + str(num_frames) + "in " + format_date + "---- \n"
+    
+    dict_segm = compute_stats(t_segm)   # get dictionary with statistics related segmentation time
+    text_to_write += "Segmentation stats:\n"
+    text_to_write += " - Mean (ms): " + str(dict_segm["mean_ms"]) + "\n"
+    text_to_write += " - Min (ms): " + str(dict_segm["min_ms"]) + "\n"
+    text_to_write += " - Max (ms): " + str(dict_segm["max_ms"]) + "\n"
+    text_to_write += " - Percentile 50 (ms): " + str(dict_segm["p50_ms"]) + "\n"
+    text_to_write += " - Percentile 95 (ms): " + str(dict_segm["p95_ms"]) + "\n"
+    text_to_write += " - Percentile 99 (ms): " + str(dict_segm["p99_ms"]) + "\n"
+    
+    dict_feat = compute_stats(t_feat)   # get dictionary with statistics related features extraction time
+    text_to_write += "Features extraction stats:\n"
+    text_to_write += " - Mean (ms): " + str(dict_feat["mean_ms"]) + "\n"
+    text_to_write += " - Min (ms): " + str(dict_feat["min_ms"]) + "\n"
+    text_to_write += " - Max (ms): " + str(dict_feat["max_ms"]) + "\n"
+    text_to_write += " - Percentile 50 (ms): " + str(dict_feat["p50_ms"]) + "\n"
+    text_to_write += " - Percentile 95 (ms): " + str(dict_feat["p95_ms"]) + "\n"
+    text_to_write += " - Percentile 99 (ms): " + str(dict_feat["p99_ms"]) + "\n"
+            
+    dict_inf = compute_stats(t_inf)     # get dictionary with statistics related features extraction time
+    text_to_write += "Inference stats:\n"
+    text_to_write += " - Mean (ms): " + str(dict_inf["mean_ms"]) + "\n"
+    text_to_write += " - Min (ms): " + str(dict_inf["min_ms"]) + "\n"
+    text_to_write += " - Max (ms): " + str(dict_inf["max_ms"]) + "\n"
+    text_to_write += " - Percentile 50 (ms): " + str(dict_inf["p50_ms"]) + "\n"
+    text_to_write += " - Percentile 95 (ms): " + str(dict_inf["p95_ms"]) + "\n"
+    text_to_write += " - Percentile 99 (ms): " + str(dict_inf["p99_ms"]) + "\n"
+    
+    dict_post = compute_stats(t_post)   # get dictionary with statistics related post analysis and command recognition time
+    text_to_write += "Reecognition stats:\n"
+    text_to_write += " - Mean (ms): " + str(dict_post["mean_ms"]) + "\n"
+    text_to_write += " - Min (ms): " + str(dict_post["min_ms"]) + "\n"
+    text_to_write += " - Max (ms): " + str(dict_post["max_ms"]) + "\n"
+    text_to_write += " - Percentile 50 (ms): " + str(dict_post["p50_ms"]) + "\n"
+    text_to_write += " - Percentile 95 (ms): " + str(dict_post["p95_ms"]) + "\n"
+    text_to_write += " - Percentile 99 (ms): " + str(dict_post["p99_ms"]) + "\n"
+            
+    # general stats
+    text_to_write += "General stats:\n"
+    text_to_write += " - Total segmentation time (ms): " + str(sum(t_segm)) + "\n"
+    text_to_write += " - Total features extraction time (ms): " + str(sum(t_feat)) + "\n"
+    text_to_write += " - Total inference time (ms): " + str(sum(t_inf)) + "\n"
+    text_to_write += " - Total post time (ms): " + str(sum(t_post)) + "\n"
+    text_to_write += "Window stats:\n"
+    text_to_write += " - Mean time (ms): " + str(dict_segm["mean_ms"] + dict_feat["mean_ms"] + dict_inf["mean_ms"] + dict_post["mean_ms"]) + "\n"
+    text_to_write += " - Min time (ms): " + str(dict_segm["min_ms"] + dict_feat["min_ms"] + dict_inf["min_ms"] + dict_post["min_ms"]) + "\n"
+    text_to_write += " - Max time (ms): " + str(dict_segm["max_ms"] + dict_feat["max_ms"] + dict_inf["max_ms"] + dict_post["max_ms"]) + "\n"
+    text_to_write += " -------------------------------------- \n"
+    
+    # write on file in append mode
+    with open(path_logfile, "a", encoding="utf-8") as f:
+        f.write(text_to_write)
+        
+# function that, given a list containing the various times for each window of the various metrics, calculates and returns the aggregated statistics
+def compute_stats(arr):
+    a = np.array(arr)
+    return {
+            "count": a.size,
+            "mean_ms": float(a.mean()),
+            "min_ms": float(a.min()),
+            "max_ms": float(a.max()),
+            "p50_ms": float(np.percentile(a,50)),
+            "p95_ms": float(np.percentile(a,95)),
+            "p99_ms": float(np.percentile(a,99))
+        }
+    
 # ------------------------------------ end: utilities method ------------------------------------
     
 # ------------------------------------ start: dataset method ------------------------------------
@@ -248,6 +336,12 @@ def extract_features(waveform, sample_rate):
 
 # method to detect commands within the audio. See the 'basic_cooldown' var that the indicatethe modality for the cooldown managing
 def find_command_from_audio(chosen_audio):
+    # Containers for timings (ms)
+    t_segm = []                     # list to contain the timing related windows segmentation of the audio file
+    t_feat = []                     # list to contain the timing related features extraction
+    t_inf  = []                     # list to contain the timing related inference
+    t_post = []                     # list to contain the timing related post analysis and command recognition
+    
     # sliding window parameters
     win_size = desired_sr * window_size     # defaulttyi = 1 s (same length of the audio in the dataset)
     hop_size = int(desired_sr * step_size)  # dafault = 0.5 s (half of the audio lenght)
@@ -279,9 +373,10 @@ def find_command_from_audio(chosen_audio):
                 waveform = np.pad(waveform, (0, pad_len))               # padding
         
         num_frames = 1 + (len(waveform) - win_size) // hop_size         # calculate the numbers of frames (windows)
-      
+    
+    audio_len = len(waveform)/desired_sr
     print("---- Start predition ----")
-    print(f"Audio input-> Name: {chosen_audio} , lenght: {len(waveform)/desired_sr:.2f} s, windows = {num_frames}")
+    print(f"Audio input-> Name: {chosen_audio} , lenght: {audio_len:.2f} s, windows = {num_frames}")
     
     if not basic_cooldown:          # case with cooldown based on command
         last_rec_command = None     # last recongnized command 
@@ -291,22 +386,31 @@ def find_command_from_audio(chosen_audio):
     # scann al the windows
     for i in range(num_frames):
          
+        t_segm_start = now_ms()
         start = int(i * hop_size)   # calculate the start of the current window
         end = int(start + win_size) # calculate the end of the current window    
         chunk = waveform[start:end] # create the chunk (window)
         center_time = (start + end) / 2 / desired_sr    # time to plot the prediction (center of current window)
+        t_segm_end = now_ms()
+        t_segm.append(t_segm_end - t_segm_start)        # add segmentation time (ms)
 
-        # Estrai feature
+        t_feat_start = now_ms()
         features = extract_features(chunk, desired_sr)  # extract features
         features = np.expand_dims(features, axis=0)     # [1, width, height, channel] -> with mel and 1s window [1,124,64,1]
+        t_feat_end = now_ms()
+        t_feat.append(t_feat_end - t_feat_start)        # add features extraction time (ms)
 
-        # Predizione
+        t_inf_start = now_ms()
         probs = network.predict(features, verbose=0)[0] # predict the class of the current windows
         pred_idx = np.argmax(probs)                     # get index of the class more likely
         conf = probs[pred_idx]                          # confidence of the predict class
+        t_inf_end = now_ms()
+        t_inf.append(t_inf_end - t_inf_start)           # add inference time (ms)
         
         probs_all.append(probs)                         # add all the probs of the current window for the plots
         times.append(center_time)                       # add the center time of current window for the plots
+        
+        t_post_start = now_ms()
         
         if skip > 0:                 # skip the current window (after a command) in basic cooldown scenario
             skip -= 1
@@ -324,11 +428,15 @@ def find_command_from_audio(chosen_audio):
             print(f"Window {i} [{start_ms}-{end_ms} ms] -> {classes[pred_idx]} ({conf*100:.2f})")
             
             skip = cooldown                 # avoid to recognize again the same command
+        
+        t_post_end = now_ms()
+        t_post.append(t_post_end - t_post_start)        # add post analysis and command recognition time (ms)
             
     probs_all = np.array(probs_all)     # convert in numpy array
     times = np.array(times)             # convert in numpy array
     print("---- End predition ----")
 
+    log_to_file(chosen_audio, audio_len, num_frames, t_segm, t_feat, t_inf, t_post) # print into log file
     # plots
     plot_probabilities(times, probs_all, classes)   # plot results
     plot_heatmap(times, probs_all, classes)         # plot heat map
