@@ -9,7 +9,6 @@ import math
 import numpy as np
 import pandas as pd
 import tensorflow_io as tfio  
-import matplotlib.pyplot as plt
 from tensorflow.python.client import device_lib 
 # for model
 import tensorflow as tf
@@ -77,7 +76,7 @@ data_channel = 1                # default value for channel the 2D images in inp
 epochs = 200                    # number of epochs for training, this is the deafault value
 early_patience = 10             # number of epochs with no improvement after which training will be stopped 
 chosen_model = 1                # indicate the model to use for training -> 0: CNN for image (SirenNet0) , 
-num_test = 1                    # number of traning to execute on the same model from which the data will then be taken and averaged to obtain the general performance of the trained model
+num_test = 3                    # number of traning to execute on the same model from which the data will then be taken and averaged to obtain the general performance of the trained model
 
 # -- status variable --
 do_mfcc = False                 # if 'true' -> calculate and use MFCC for training , if 'false' -> donìt calculate MFCC and use MEL for training
@@ -396,34 +395,20 @@ def extract_features(waveform, sample_rate):
 
 # ------------------------------------ start: methods for data augmentation ------------------------------------
 
-# (a) Rumore di fondo
+# background noise
 def add_noise(wave, noise_level=0.005):
-    noise = tf.random.normal(shape=tf.shape(wave), mean=0.0, stddev=noise_level)
-    return wave + noise
+    noise = tf.random.normal(shape=tf.shape(wave), mean=0.0, stddev=noise_level)# generate gaussian noise
+    return wave + noise                     # return wave plus gaussian noise
 
-#wave_with_noise = add_noise(waveform)
-
-# (b) Time-shifting -> Time-shift: sposta la parola dentro la finestra da 1s (±100 ms qui). Aumenta la robustezza alla posizione della keyword.
+# Time-shifting -> Time-shift: moves the word within the 1s window (±100 ms here). Increases robustness to the position of the keyword.
 def time_shift(wave, shift_max=0.1):
-    shift = int(shift_max * desired_sr)  # massimo 0.1s
-    shift_amt = tf.random.uniform([], -shift, shift, dtype=tf.int32)
-    return tf.roll(wave, shift_amt, axis=0)
+    shift = int(shift_max * desired_sr)         # max 0.1s
+    shift_amt = tf.random.uniform([], -shift, shift, dtype=tf.int32)    # extracts a random integer between -shift and +shift (represents how many samples to shift the audio waveform)
+    return tf.roll(wave, shift_amt, axis=0)     # return the shifted wave
 
-#wave_shifted = time_shift(waveform)
-
-# (c) Pitch shifting (con tfio)
+# Function that applies a pitch shift to the input audio signal. n_steps is the number of semitone shifts -> if positive: increases the pitch (higher voice). if negative: lowers the pitch (deeper voice).
 def pitch_shift(wave, n_steps=2):
     return tfio.audio.pitch_shift(wave, rate=desired_sr, n_steps=n_steps)
-    
-#wave_pitched = pitch_shift(waveform, n_steps=2)
-"""
-Pitch shift: cambia l’altezza (tono) senza alterare troppo la durata (dipende dall’algoritmo).
-
-n_steps=2 → due semitoni ↑. Puoi randomizzare tra [-2, +2] o simili.
-
-Richiede tensorflow-io (pip install tensorflow-io).
-Pitch shifting (cambia tono della voce).
-"""
 
 # ------------------------------------ end: methods for data augmentation ------------------------------------
 
@@ -703,29 +688,8 @@ def make_fit_model():
 
 # ------------------------------------ main ------------------------------------        
 if __name__ == "__main__":
-    GPU_check()             # set GPU
-    load_and_save_ds()      # loand ds, extract features and write it on disk
-    make_fit_model()        # train
+    GPU_check()                     # set GPU
+    load_and_save_ds()              # loand ds, extract features and write it on disk
+    make_fit_model()                # train
     save_model_compatibily_format() # save trained model in other format to compatibility
-    
-"""
-IMPORTANTE
-    guardare altre note del file ... o readme che vengono spiegate un po' di cose utilities
-    
-NOTE 0:
-    
-        
-    Esatto, hai centrato il punto 
-    MEL vs MFCC per CNN
-    Mel-spectrogram è di solito preferito per le CNN: mantiene una rappresentazione “immagine-like” (tempo × frequenze), con valori continui positivi → si comporta come una “immagine in scala di grigi”.
-    MFCC è più compatto e astratto (meno ridondanza, più robusto al rumore), ma perdi un po’ di struttura temporale-frequenziale.
-    Se usi una CNN pura, Mel-spectrogram è lo standard; se usi modelli più classici (es. GMM, SVM), allora MFCC.
-    VRAM & dataset strategy
-    Giustissimo: non puoi tenere in GPU RAM tutte le features.
-    Strategia ottimale:
-    Precalcoli Mel o MFCC una sola volta.
-    Le salvi su disco come immagini 2D (numpy array).
-    Durante training, carichi i .npy o .npz come fai con le immagini.
-    Così non ricalcoli mai più le features → guadagni velocità enorme.
-"""
 
