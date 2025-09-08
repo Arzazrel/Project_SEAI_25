@@ -17,8 +17,8 @@ import tensorflow_io as tfio
 # -- path --
 dir_father = ".."               # fathere folder containing all other folders used
 dir_ds_name = "dataset"         # folder containing all the dataset to load for the program
-#ds_name = "speech_ds"           # folder name for the target dataset
-ds_name = "test"               # folder name for the target dataset (testing purpose)
+ds_name = "speech_ds"           # folder name for the target dataset
+#ds_name = "test"               # folder name for the target dataset (testing purpose)
 path_dir_ds = os.path.join(dir_father,dir_ds_name,ds_name)# folder containing the dataset to load (nested dataset)
 
 # -- audio file var --
@@ -42,7 +42,6 @@ def format_time(time):
     return(f"{hours:02}:{minutes:02}:{seconds:02}")
     
 # ------------------------------------ end: utilities method ------------------------------------
-
 
 start_time = time.time()                        # start time
 print("-------------------- READING DS --------------------")   # status print

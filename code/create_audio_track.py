@@ -2,7 +2,7 @@
 """
 @author: Alessandro Diana
 
-Description: program that, given an audio file, divides it into windows and then implements the model to recognize the commands contained within it.
+Description: program for creating long audio tracks by joining audio tracks from the dataset based on their class membership.
 """
 
 import os
@@ -105,7 +105,7 @@ def prepare_tracks_for_concat_tf(selected_tracks):
             # read audio file
             audio = tf.io.read_file(path)
             waveform, sample_rate = tf.audio.decode_wav(audio, desired_channels=1)
-            waveform = tf.squeeze(waveform, axis=-1)  # rimuove canale singolo
+            waveform = tf.squeeze(waveform, axis=-1)        # remove, single channel
 
             # Resample if necessary
             if sample_rate != desired_sr:
@@ -164,7 +164,7 @@ def log_to_file(selected_tracks, track_name, enable_log=True):
 
     line += "] -- num of command in the audio track: " + str(num_command) + "\n"
     
-    # Scrittura su file in append
+    # Writing to file in append mode
     with open(path_logfile, "a", encoding="utf-8") as f:
         f.write(line)
         

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 @author: Alessandro Diana
+
+Description: program that reads and processes the dataset to obtain statistics about it
 """
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # 0 = all log, 1 = filter INFO, 2 = filter WARNING, 3 = filter ERROR
@@ -240,7 +242,7 @@ def extract_full_features(waveform, sample_rate):
         waveform = tfio.audio.resample(waveform, rate_in=tf.cast(sample_rate, tf.int64), rate_out=desired_sr)   # Resample a 16kHz mono
         
     desired_len = desired_sr                # 1 s = desired_sr -> num_samples = frequency -> in this case 16000 samples
-    curr_len = tf.shape(waveform)[0]        # 
+    curr_len = tf.shape(waveform)[0]         
 
     waveform = waveform[:desired_len]               # If too long → Truncate to 1 second (desired_sr samples)
     pad_len = desired_len - tf.shape(waveform)[0]   # If too short → pad with zeros up to 1 second (desired_sr samples)
@@ -314,7 +316,6 @@ def print_avg_class_spectrum(avg_features):
                     
                 plt.tight_layout()
                 plt.show()
-                                
                 """
                 For STFT and Mel: Use np.log because the values ​​are always positive -> this highlights the power differences.
                 For MFCC: DO NOT use np.log (they are already compressed scale values, even negative ones).
@@ -326,7 +327,6 @@ if __name__ == "__main__":
     avg_features = load_and_analyze_audio_from_ds() # load and analyze the dataset
     print_avg_class_spectrum(avg_features)          # print the extracted features
 
-    
 """
 NOTE 0: 
     sums_by_class is a dictionary containing the spectral statistic for each command class of dataset.
@@ -410,5 +410,4 @@ NOTE 6:
     The others are often ignored because they are less informative or too sensitive to noise.
 
     Be careful, the first coefficients are not necessarily the ones with the greatest intensity, but they are the most significant for distinguishing sounds and words (phonemes).
-
 """

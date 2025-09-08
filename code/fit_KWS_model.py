@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 @author: Alessandro Diana
+
+Description: A program for training networks given a dataset. It loads the dataset, extracts its features, and saves them to disk. 
+             It also trains the network, saves the trained models, and displays training statistics.
 """
 import os
 import time
